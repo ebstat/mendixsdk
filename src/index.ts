@@ -3,16 +3,15 @@ import { MendixPlatformClient } from 'mendixplatformsdk';
 import { microflows } from 'mendixmodelsdk';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
-// Personal Access Token must exist in env
 const PAT = process.env.MENDIX_PAT;
 if (!PAT) {
   console.error('Missing MENDIX_PAT environment variable');
   process.exit(1);
 }
 
-const client = new MendixPlatformClient({ auth: { personalAccessToken: PAT } });
+const client = new MendixPlatformClient(PAT);   // <- 1. fixed
 
 app.get('/', (_req, res) => {
   res.json({ message: 'Mendix Model Reader is running' });
