@@ -1,5 +1,5 @@
 const express = require('express');
-const { PlatformClient } = require('mendixplatformsdk');   // ← real name
+const { MendixPlatformClient } = require('mendixplatformsdk');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,7 +11,7 @@ if (!USERNAME || !APIKEY) {
   process.exit(1);
 }
 
-const client = new PlatformClient(USERNAME, APIKEY);
+const client = new MendixPlatformClient(USERNAME, APIKEY);
 
 app.get('/microflows/:appId', async (req, res) => {
   try {
