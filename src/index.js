@@ -1,19 +1,19 @@
 // src/index.js
 const express = require('express');
-const { MendixSdkClient } = require('mendixplatformsdk');
+const { MendixPlatformClient } = require('mendixplatformsdk');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
 const USERNAME = process.env.MENDIX_USERNAME;
 const APIKEY   = process.env.MENDIX_APIKEY;
-
 if (!USERNAME || !APIKEY) {
   console.error('Missing MENDIX_USERNAME and/or MENDIX_APIKEY');
   process.exit(1);
 }
 
-const client = new MendixSdkClient(USERNAME, APIKEY);
+// OLD (5.x) way: username + apiKey in constructor
+const client = new MendixPlatformClient(USERNAME, APIKEY);
 
 app.get('/microflows/:appId', async (req, res) => {
   try {
