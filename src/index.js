@@ -1,8 +1,7 @@
-// src/index.js
 const express = require('express');
-const { MendixPlatformClient } = require('mendixplatformsdk');
+const { PlatformClient } = require('mendixplatformsdk');   // ← real name
 
-const app  = express();
+const app = express();
 const PORT = process.env.PORT || 3000;
 
 const USERNAME = process.env.MENDIX_USERNAME;
@@ -12,17 +11,14 @@ if (!USERNAME || !APIKEY) {
   process.exit(1);
 }
 
-// OLD (5.x) way: username + apiKey in constructor
-const client = new MendixPlatformClient(USERNAME, APIKEY);
+const client = new PlatformClient(USERNAME, APIKEY);
 
 app.get('/microflows/:appId', async (req, res) => {
   try {
     const { appId } = req.params;
 
-    const project = await client.getProject(appId);   // <- fixed
-    if (!project) {
-      return res.status(404).json({ error: 'App not found or access denied' });
-    }
+    const project = await client.getProject(appId);
+    if (!project) return res.status(404).json({ error: 'App not found' });
 
     const workingCopy = await project.createTemporaryWorkingCopy('main');
     const model = await client.model().openWorkingCopy(workingCopy.id);
@@ -34,9 +30,9 @@ app.get('/microflows/:appId', async (req, res) => {
     res.json({ microflows: names });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message || 'Unknown error' });
+    res.status(500).json({ error: err.message });
   }
 });
 
 app.get('/', (_req, res) => res.send('Mendix Model Reader is running'));
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
