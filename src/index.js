@@ -1,29 +1,31 @@
 // src/index.js
 const express = require('express');
-const { MendixPlatformClient } = require('mendixplatformsdk');
+const { MendixSdkClient } = require('mendixplatformsdk');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// --- auth ---
-const PAT = process.env.MENDIX_PAT;
-if (!PAT) {
-  console.error('Missing MENDIX_PAT');
+const USERNAME = process.env.MENDIX_USERNAME;
+const APIKEY   = process.env.MENDIX_APIKEY;
+
+if (!USERNAME || !APIKEY) {
+  console.error('Missing MENDIX_USERNAME and/or MENDIX_APIKEY');
   process.exit(1);
 }
 
-const client = new MendixPlatformClient();
+const client = new MendixSdkClient(USERNAME, APIKEY);
 
-client.platform().setApiKey(PAT);
-
-/* ---------- route ---------- */
 app.get('/microflows/:appId', async (req, res) => {
   try {
     const { appId } = req.params;
 
-    const mxApp = await client.platform().getApp(appId);
-    const workingCopy = await mxApp.createTemporaryWorkingCopy('main');
-    const model = await workingCopy.openModel();
+    const project = await client.platform().getProject(appId);
+    if (!project) {
+      return res.status(404).json({ error: 'App not found or access denied' });
+    }
+
+    const workingCopy = await project.createTemporaryWorkingCopy('main');
+    const model = await client.model().openWorkingCopy(workingCopy.id);
 
     const names = [];
     for (const mf of model.allMicroflows()) {
