@@ -11,7 +11,8 @@ if (!PAT) {
   process.exit(1);
 }
 
-const client = new MendixPlatformClient(PAT);   // <- 1. fixed
+const client = new MendixPlatformClient();         // <- 0 arguments
+client.platform().setApiKey(PAT);                  // <- token here
 
 app.get('/', (_req, res) => {
   res.json({ message: 'Mendix Model Reader is running' });
