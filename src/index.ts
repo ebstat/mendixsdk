@@ -1,30 +1,46 @@
 // src/index.ts
 import express from 'express';
-import { MendixPlatformClient } from 'mendixplatformsdk';
+import { MendixSdkClient } from 'mendixplatformsdk';
+import { microflows } from 'mendixmodelsdk';
 
 const app  = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-const PAT = process.env.MENDIX_PAT;
-if (!PAT) {
-  console.error('Missing MENDIX_PAT');
+/* ---------- authentication ---------- */
+const USERNAME = process.env.MENDIX_USERNAME; // your Mendix user name
+const APIKEY   = process.env.MENDIX_APIKEY;   // your Mendix API key
+
+if (!USERNAME || !APIKEY) {
+  console.error('Missing MENDIX_USERNAME and/or MENDIX_APIKEY');
   process.exit(1);
 }
 
-const client = new MendixPlatformClient();
+/* ---------- client ---------- */
+const client = new MendixSdkClient(USERNAME, APIKEY);
 
+/* ---------- routes ---------- */
 app.get('/microflows/:appId', async (req, res) => {
   try {
     const { appId } = req.params;
 
-    const mxApp = await client.platform().getApp(appId, {
-      personalAccessToken: PAT,
-    });
+    // Get the project
+    const project = await client.platform().getProject(appId);
+    if (!project) {
+      return res.status(404).json({ error: 'App not found or access denied' });
+    }
 
-    const workingCopy = await mxApp.createTemporaryWorkingCopy('main');
-    const model = await workingCopy.openModel();
+    // Create a temporary working copy
+    const workingCopy = await project.createTemporaryWorkingCopy('main');
 
-    const names = model.allMicroflows().map(mf => mf.qualifiedName);
+    // Open the model
+    const model = await client.model().openWorkingCopy(workingCopy.id);
+
+    // Collect microflow names
+    const names: string[] = [];
+    for (const mf of model.allMicroflows()) {
+      names.push(mf.qualifiedName);
+    }
+
     res.json({ microflows: names });
   } catch (err: any) {
     console.error(err);
@@ -34,4 +50,5 @@ app.get('/microflows/:appId', async (req, res) => {
 
 app.get('/', (_req, res) => res.send('Mendix Model Reader is running'));
 
-app.listen(PORT, () => console.log(`Server on ${PORT}`));
+/* ---------- start server ---------- */
+app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
