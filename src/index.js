@@ -19,7 +19,7 @@ app.get('/microflows/:appId', async (req, res) => {
   try {
     const { appId } = req.params;
 
-    const project = await client.platform().getProject(appId);
+    const project = await client.getProject(appId);   // <- fixed
     if (!project) {
       return res.status(404).json({ error: 'App not found or access denied' });
     }
